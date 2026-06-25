@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_URL || "https://trip-ai-yiyj.onrender.com/api",
 });
 
 // Request interceptor to add JWT token
@@ -18,4 +18,4 @@ API.interceptors.request.use(
   }
 );
 
-export default API;
+export default API;

@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import API from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
-import { Compass, User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Compass, User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [form, setForm] = useState({
     name: "",
@@ -16,10 +18,13 @@ function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [slowWarning, setSlowWarning] = useState(false);
+  const slowTimerRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSlowWarning(false);
 
     if (!form.name || !form.email || !form.password) {
       setError("Please fill in all fields.");
@@ -33,21 +38,36 @@ function Register() {
 
     setSubmitting(true);
 
+    // Show "waking up server" notice after 5s (Render cold start)
+    slowTimerRef.current = setTimeout(() => setSlowWarning(true), 5000);
+
     try {
-      await API.post("/auth/register", form);
+      const { data } = await API.post("/auth/register", form);
+      clearTimeout(slowTimerRef.current);
+      setSlowWarning(false);
       setSuccess(true);
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-    } catch (error) {
-      console.error(error);
+
+      // Auto-login with the token returned from register
+      if (data.token && data.user) {
+        login(data.token, data.user);
+        setTimeout(() => navigate("/dashboard"), 1500);
+      } else {
+        setTimeout(() => navigate("/login"), 1500);
+      }
+    } catch (err) {
+      clearTimeout(slowTimerRef.current);
+      setSlowWarning(false);
+      console.error(err);
       setError(
-        error.response?.data?.message || "Registration failed. Try a different email."
+        err.response?.data?.message || "Registration failed. Try a different email."
       );
     } finally {
       setSubmitting(false);
     }
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => () => clearTimeout(slowTimerRef.current), []);
 
   return (
     <div className="min-h-screen bg-gradient-to-tr from-slate-50 via-slate-100 to-indigo-50/50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
@@ -84,7 +104,17 @@ function Register() {
               <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
               <div>
                 <p className="font-bold">Account created!</p>
-                <p className="text-emerald-600">Redirecting to log in screen...</p>
+                <p className="text-emerald-600">Redirecting to dashboard...</p>
+              </div>
+            </div>
+          )}
+
+          {slowWarning && !success && (
+            <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start space-x-3 text-amber-700 text-sm">
+              <Loader2 className="h-5 w-5 text-amber-500 shrink-0 animate-spin" />
+              <div>
+                <p className="font-semibold">Waking up the server...</p>
+                <p className="text-amber-600">The server was sleeping. This may take up to 30 seconds on first request.</p>
               </div>
             </div>
           )}
@@ -192,7 +222,12 @@ function Register() {
                 disabled={submitting || success}
                 className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-indigo-100 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-75 disabled:cursor-not-allowed hover:translate-y-[-1px]"
               >
-                {submitting ? "Creating account..." : "Sign Up"}
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating account...
+                  </span>
+                ) : "Sign Up"}
               </button>
             </div>
           </form>
