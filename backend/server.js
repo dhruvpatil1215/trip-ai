@@ -10,40 +10,45 @@ const itineraryRoutes = require("./routes/itineraryRoutes");
 
 const app = express();
 
+// Connect Database
 connectDB();
 
-// Allowed origins: set CLIENT_URL on Render to your Vercel frontend URL
+// Allowed origins
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
 ];
 
+// CORS Middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error(`CORS: origin ${origin} not allowed`));
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
   })
 );
 
-// Handle preflight requests for all routes
-app.options("/*", cors());
-
+// Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files statically
+// Static uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// API Routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/itineraries", itineraryRoutes);
 
+// Health Check
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
@@ -51,6 +56,7 @@ app.get("/", (req, res) => {
   });
 });
 
+// 404 Handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -58,10 +64,11 @@ app.use((req, res) => {
   });
 });
 
-// Global Error Handler
+// Error Handler
 const { errorHandler } = require("./middleware/errorMiddleware");
 app.use(errorHandler);
 
+// Start Server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
