@@ -17,26 +17,24 @@ connectDB();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://trip-ai-lemon.vercel.app/"
-  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
+  "https://trip-ai-lemon.vercel.app"
 ];
 
-// CORS Middleware
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error(`CORS: origin ${origin} not allowed`));
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
-
+// CORS Middlewa
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
