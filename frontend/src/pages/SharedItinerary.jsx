@@ -31,7 +31,8 @@ function SharedItinerary() {
       try {
         setLoading(true);
         // Note: we call the public endpoint directly via a standard axios request (doesn't need Bearer token)
-        const res = await axios.get(`http://localhost:5000/api/itineraries/share/${shareId}`);
+        const res = await axios.get(`https://trip-ai-yiyj.onrender.com/api/itineraries/share/${shareId}`
+);
         if (res.data.success) {
           setItinerary(res.data.itinerary);
         }
