@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const generateToken = (id) => {
   return jwt.sign(
     { id },
-    "dhruv_super_secret_key",
+    process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
 };
