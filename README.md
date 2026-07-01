@@ -1,4 +1,4 @@
-# 🌍 Trrip AI
+# 🌍 Trip AI
 
 **Trrip AI** is an AI-powered travel planning platform that automatically generates personalized travel itineraries from uploaded travel documents such as flight tickets, hotel bookings, and travel confirmations.
 
@@ -105,8 +105,8 @@ trrip-ai/
 ### Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/trrip-ai.git
-cd trrip-ai
+git clone https://github.com/yourusername/trip-ai.git
+cd trip-ai
 ```
 
 ### Install Frontend Dependencies
